@@ -4,26 +4,40 @@ from Wecom import *
 import requests, re, json, copy, traceback
 
 
-session = requests.Session()
+# session = requests.Session()
 wecom_cid,wecom_aid,wecom_secret=WECOM
 
 def ncov_report(username, password, name, is_useold):
+    session = requests.Session()
+    login_page = session.get(LOGIN_PAGE,headers={**COMMON_HEADERS, **COMMON_POST_HEADERS, 'Referer': HEADERS.REFERER_LOGIN_API
+                 })
+    submit = re.findall('(<input.*?name="submit".*value=")(.+)(")',login_page.text)[0][1]
+    type = "username_password"
+    execution = re.findall('(<input\s*name="execution".*?value=")(.+?)(")', login_page.text)[0][1]
+    evenId = re.findall('(<input.*?name="_eventId".*value=")(.+)(")', login_page.text)[0][1]
     print('登录北邮 nCoV 上报网站')
     login_res = session.post(
         LOGIN_API,
-        data={'username': username, 'password': password, },
+        data={'username': username, 'password': password,
+              'submit':submit,"type":type,
+              "execution":execution,'_eventId':evenId},
+        cookies=login_page.cookies,
         headers={**COMMON_HEADERS, **COMMON_POST_HEADERS, 'Referer': HEADERS.REFERER_LOGIN_API,
                  })
-    if login_res.status_code != 200:
-        raise RuntimeError('login_res 状态码不是 200')
-    get_res = session.get(
-        GET_API,
-        headers={**COMMON_HEADERS, 'Accept': HEADERS.ACCEPT_HTML},
-    )
-    if get_res.status_code != 200:
-        raise RuntimeError('get_res 状态码不是 200')
+    # if login_res.status_code == 302:
+    eai_sess = 'bem8ebuk320fgeiuulddvupgg7'
+    UUkey = '7e2fe9c2bf6fb20788cc52f4eda41e76'
+    cas_api = session.get(login_res.url,cookies={"eai-sess":eai_sess,"UUkey":UUkey})
+    if cas_api.status_code != 200:
+        raise RuntimeError('cas_api 状态码不是 200')
+    # get_res = session.get(
+    #     GET_API,
+    #     headers={**COMMON_HEADERS, 'Accept': HEADERS.ACCEPT_HTML},
+    # )
+    # if get_res.status_code != 200:
+    #     raise RuntimeError('get_res 状态码不是 200')
     try:
-        old_data = json.loads('{' + re.search(r'(?<=oldInfo: {).+(?=})', get_res.text)[0] + '}')
+        old_data = json.loads('{' + re.findall(r'(?<=oldInfo: {).+(?=})', cas_api.text)[0] + '}')
     except:
         raise RuntimeError('未获取到昨日打卡数据，请今日手动打卡明日再执行脚本或使用固定打卡数据')
     post_data = json.loads(copy.deepcopy(INFO).replace("\n", "").replace(" ", ""))
@@ -61,73 +75,63 @@ def ncov_report(username, password, name, is_useold):
         raise RuntimeError('report_res 状态码不是 200')
     return post_data,report_res.text
 
-def ncov_even_report(username, password, name, is_useold):
-    print('登录北邮 nCoV 上报网站')
-    login_res = session.post(
-        LOGIN_API,
-        data={'username': username, 'password': password, },
-        headers={**COMMON_HEADERS, **COMMON_POST_HEADERS, 'Referer': HEADERS.REFERER_LOGIN_API,
-                 })
-    if login_res.status_code != 200:
-        raise RuntimeError('login_res 状态码不是 200')
-
-    get_res = session.get(
-        GET_API,
-        headers={**COMMON_HEADERS, 'Accept': HEADERS.ACCEPT_HTML},
-    )
-    if get_res.status_code != 200:
-        raise RuntimeError('get_res 状态码不是 200')
-    try:
-        old_data = json.loads('{' + re.search(r'(?<=oldInfo: {).+(?=})', get_res.text)[0] + '}')
-    except:
-        raise RuntimeError('未获取到昨日打卡数据，请今日手动打卡明日再执行脚本或使用固定打卡数据')
-
-    get_res = session.get(
-        GETEven_API,
-        headers={**COMMON_HEADERS, 'Accept': HEADERS.ACCEPT_HTML},
-    )
-    if get_res.status_code != 200:
-        raise RuntimeError('get_res 状态码不是 200')
-
-    post_data = json.loads(copy.deepcopy(INFO_E))
-    if is_useold:
-        try:
-            for k, v in old_data.items():
-                if k in post_data:
-                    post_data[k] = v
-            geo = old_data
-            info=geo['geo_api_info']
-            geo=json.loads(info)
-            
-            province = geo['addressComponent']['province']
-            city = geo['addressComponent']['city']
-            district=geo['addressComponent']['district']
-            if geo['addressComponent']['city'].strip() == "" and len(re.findall(r'北京市|上海市|重庆市|天津市', province)) != 0:
-                city = geo['addressComponent']['province']
-            
-            #area = province + " " + city + " " + geo['addressComponent']['district']
-            area = province+city+district
-            address = geo['formattedAddress']
-            post_data['geo_api_info']=info
-            post_data['province'] = province
-            post_data['city'] = city
-            post_data['area'] = area
-            post_data['address'] = address
-            
-
-            # 强行覆盖一些字段
-
-        except:
-            print("加载上次晨午晚检数据错误，采用固定数据")
-            post_data = json.loads(copy.deepcopy(INFO_E).replace("\n", "").replace(" ", ""))
-    report_res = session.post(
-        POSTEven_API,
-        data=post_data,
-        headers={**COMMON_HEADERS,**COMMON_POST_HEADERS,'Referer': HEADERS.REFERER_POST_API,},
-    )
-    if report_res.status_code != 200:
-        raise RuntimeError('report_res 状态码不是 200')
-    return post_data,report_res.text
+# def ncov_even_report(username, password, name, is_useold):
+#     print('登录北邮 nCoV 上报网站')
+#     login_res = session.post(
+#         LOGIN_API,
+#         data={'username': username, 'password': password, },
+#         headers={**COMMON_HEADERS, **COMMON_POST_HEADERS, 'Referer': HEADERS.REFERER_LOGIN_API,
+#                  })
+#     if login_res.status_code != 200:
+#         raise RuntimeError('login_res 状态码不是 200')
+#     get_res = session.get(
+#         GETEven_API,
+#         headers={**COMMON_HEADERS, 'Accept': HEADERS.ACCEPT_HTML},
+#     )
+#     if get_res.status_code != 200:
+#         raise RuntimeError('get_res 状态码不是 200')
+#     try:
+#         old_data = json.loads(get_res.text)
+#     except:
+#         raise RuntimeError('未获取到上次打卡数据，请先手动打卡下次再执行脚本')
+#     post_data = json.loads(copy.deepcopy(INFO_E))
+#     if is_useold:
+#         try:
+#             for k, v in old_data.items():
+#                 if k in post_data:
+#                     post_data[k] = v
+#             geo = old_data
+#             info=geo['d']['info']['geo_api_info']
+#             geo=json.loads(info)
+#
+#             province = geo['addressComponent']['province']
+#             city = geo['addressComponent']['city']
+#             district=geo['addressComponent']['district']
+#             if geo['addressComponent']['city'].strip() == "" and len(re.findall(r'北京市|上海市|重庆市|天津市', province)) != 0:
+#                 city = geo['addressComponent']['province']
+#
+#             #area = province + " " + city + " " + geo['addressComponent']['district']
+#             area = province+city+district
+#             address = geo['formattedAddress']
+#
+#             post_data['province'] = province
+#             post_data['city'] = city
+#             post_data['area'] = area
+#             post_data['address'] = address
+#
+#             # 强行覆盖一些字段
+#
+#         except:
+#             print("加载上次晨午晚检数据错误，采用固定数据")
+#             post_data = json.loads(copy.deepcopy(INFO_E).replace("\n", "").replace(" ", ""))
+#     report_res = session.post(
+#         POSTEven_API,
+#         data=post_data,
+#         headers={**COMMON_HEADERS,**COMMON_POST_HEADERS,'Referer': HEADERS.REFERER_POST_API,},
+#     )
+#     if report_res.status_code != 200:
+#         raise RuntimeError('report_res 状态码不是 200')
+#     return post_data,report_res.text
 
 successs,ress,usernames,names,datas = [],[],[],[],[]
 for user in  USERS:
@@ -150,12 +154,14 @@ for user in  USERS:
     names+=[name]
 
 
-    try:
-        data,res = ncov_even_report(username=username,password=password,name=name,is_useold=(useold==0))
-    except:
-        success = False
-        data,res = '',traceback.format_exc()
+    # try:
+    #     data,res = ncov_even_report(username=username,password=password,name=name,is_useold=(useold==0))
+    # except:
+    #     success = False
+    #     data,res = '',traceback.format_exc()
+    #
+    # msg2=f' {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {name}《晨午晚检》填报成功!服务器返回数据:\n{res}\n\n晨午晚检填报数据:\n{data}\n' if success else f'{name}《晨午晚检》填报失败!发生如下异常:\n{res}'
+    # print(msg2)
+    # send_to_wecom(msg2,wecom_cid, wecom_aid, wecom_secret)
 
-    msg2=f' {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {name}《晨午晚检》填报成功!服务器返回数据:\n{res}\n\n晨午晚检填报数据:\n{data}\n' if success else f'{name}《晨午晚检》填报失败!发生如下异常:\n{res}'
-    print(msg2)
-    send_to_wecom(msg2,wecom_cid, wecom_aid, wecom_secret)
+    
