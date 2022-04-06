@@ -7,10 +7,14 @@ import os
 USERS=[("学号","密码","姓名/昵称",0)]
 WECOM=("企业ID③", "应用ID①", "应用secret②")
 """
+
 USERS = eval(os.environ['USERS'])
 WECOM = eval(os.environ['WECOM'])
 
-LOGIN_API = 'https://app.bupt.edu.cn/uc/wap/login/check'
+
+LOGIN_PAGE = "https://auth.bupt.edu.cn/authserver/login?service=https%3A%2F%2Fapp.bupt.edu.cn%2Fa_bupt%2Fapi%2Fsso%2Fcas%3Fredirect%3Dhttps%253A%252F%252Fapp.bupt.edu.cn%252Fncov%252Fwap%252Fdefault%252Findex%26from%3Dwap"
+# LOGIN_API = 'https://app.bupt.edu.cn/uc/wap/login/check'
+LOGIN_API = 'https://auth.bupt.edu.cn/authserver/login'
 GET_API = 'https://app.bupt.edu.cn/ncov/wap/default/index'
 REPORT_API = 'https://app.bupt.edu.cn/ncov/wap/default/save'
 GETEven_API = 'https://app.bupt.edu.cn/xisuncov/wap/open-report/index'
@@ -20,7 +24,7 @@ POSTEven_API = 'https://app.bupt.edu.cn/xisuncov/wap/open-report/save'
 # 当今日没有填报时，在https://app.bupt.edu.cn/ncov/wap/default/index下进行填报，
 # 全部填完，不要提交，f12打开控制台，在Console页面下输入代码 console.log(vm.info) 就会得到以下信息，之后每天就默认填以下信息
 INFO = r"""{
-        "address":"北京市海淀区北太平庄街道北京邮电大学计算机学院北京邮电大学海淀校区",
+        "address":"北京市海淀区北太平庄街道北京邮电大学海淀校区",
         "area":"北京市  海淀区",
         "bztcyy":"",
         "city":"北京市",
@@ -76,7 +80,7 @@ INFO_E = r"""{
     "area":"北京市  海淀区",
     "city":"北京市",
     "province":"北京市",
-    "address":"北京市海淀区北太平庄街道北京邮电大学计算机学院北京邮电大学海淀校区",
+    "address":"北京市海淀区北太平庄街道北京邮电大学海淀校区",
     "geo_api_info": "{\"type\":\"complete\",\"info\":\"SUCCESS\",\"status\":1,\"fEa\":\"jsonp_940261_\",\"position\":{\"Q\":39.960,\"R\":116.35640,\"lng\":116.356340,\"lat\":39.960},\"message\":\"Get geolocation time out.Get ipLocation success.Get address success.\",\"location_type\":\"ip\",\"accuracy\":null,\"isConverted\":true,\"addressComponent\":{\"citycode\":\"010\",\"adcode\":\"100876\",\"businessAreas\":[],\"neighborhoodType\":\"科教文化服务;学校;高等院校\",\"neighborhood\":\"北京邮电大学\",\"building\":\"北京邮电大学计算机学院\",\"buildingType\":\"科教文化服务;学校;高等院校\",\"street\":\"西土城路\",\"streetNumber\":\"10号\",\"country\":\"中国\",\"province\":\"北京市\",\"city\":\"\",\"district\":\"海淀区\",\"towncode\":\"\",\"township\":\"北太平庄街道\"},\"formattedAddress\":\"北京市海淀区北太平庄街道北京邮电大学计算机学院北京邮电大学海淀校区\",\"roads\":[],\"crosses\":[],\"pois\":[]}",
     "sfcyglq": "0",
     "sfyzz": "0","qtqk": "","askforleave": "0"
