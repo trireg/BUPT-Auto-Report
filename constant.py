@@ -9,7 +9,7 @@ WECOM=("企业ID③", "应用ID①", "应用secret②")
 """
 
 USERS = eval(os.environ['USERS'])
-print(os.environ.keys())
+# print(os.environ.keys())
 # WECOM = eval(os.environ['WECOM'])
 SENDKEY = os.environ['SENDKEY']
 
