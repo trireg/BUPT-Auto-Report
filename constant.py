@@ -10,7 +10,7 @@ WECOM=("企业ID③", "应用ID①", "应用secret②")
 
 USERS = eval(os.environ['USERS'])
 # WECOM = eval(os.environ['WECOM'])
-SENDKEY = eval(os.environ['SENDKEY'])
+SENDKEY = os.environ['SENDKEY']
 
 
 LOGIN_PAGE = "https://auth.bupt.edu.cn/authserver/login?service=https%3A%2F%2Fapp.bupt.edu.cn%2Fa_bupt%2Fapi%2Fsso%2Fcas%3Fredirect%3Dhttps%253A%252F%252Fapp.bupt.edu.cn%252Fncov%252Fwap%252Fdefault%252Findex%26from%3Dwap"
