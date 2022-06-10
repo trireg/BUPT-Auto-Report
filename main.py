@@ -99,6 +99,6 @@ for user in  USERS:
         success += 1
     msg = '| '+ name + ' | ' + res + ' |'
     table.append(msg)
-    print(msg)
+#     print(msg)
 post_msg = '\n'.join(table)
 server_push(SENDKEY,title.format(success = success,total = total),post_msg)
